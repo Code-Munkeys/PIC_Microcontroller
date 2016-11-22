@@ -3,7 +3,7 @@ LIST P=16C84
 ;LANGUAGE               RISC-like architecture
 ;WRITTEN BY             Franz Ayestaran
 ;DATE                   08/08/02               
-;FILE SAVED AS          MESSAGE.ASM
+;FILE SAVED AS          LCD_Module_16x2_4Bit.ASM
 ;FOR PIC 16C84          18 pin device
 ;RESONATOR              4MHz
 ;CODE PROTECTION        OFF
