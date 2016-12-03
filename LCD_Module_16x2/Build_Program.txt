@@ -13,13 +13,6 @@ Clean: Deleted file "C:\GitHubRepositories\PIC_Microcontroller\LCD_Module_16x2\L
 Clean: Deleted file "C:\GitHubRepositories\PIC_Microcontroller\LCD_Module_16x2\LCD_Module_16x2_4Bit.mcs".
 Clean: Done.
 Executing: "C:\Program Files\Microchip\MPASM Suite\MPASMWIN.exe" /q /p16F84A "LCD_Module_16x2_4Bit.ASM" /l"LCD_Module_16x2_4Bit.lst" /e"LCD_Module_16x2_4Bit.err" /d__DEBUG=1
-Warning[205] C:\GITHUBREPOSITORIES\PIC_MICROCONTROLLER\LCD_MODULE_16X2\LCD_MODULE_16X2_4BIT.ASM 1 : Found directive in column 1. (LIST)
-Warning[203] C:\GITHUBREPOSITORIES\PIC_MICROCONTROLLER\LCD_MODULE_16X2\LCD_MODULE_16X2_4BIT.ASM 86 : Found opcode in column 1. (OPTION)
-Warning[211] C:\GITHUBREPOSITORIES\PIC_MICROCONTROLLER\LCD_MODULE_16X2\LCD_MODULE_16X2_4BIT.ASM 86 : Extraneous arguments on the line.
-Warning[224] C:\GITHUBREPOSITORIES\PIC_MICROCONTROLLER\LCD_MODULE_16X2\LCD_MODULE_16X2_4BIT.ASM 86 : Use of this instruction is not recommended.
-Warning[203] C:\GITHUBREPOSITORIES\PIC_MICROCONTROLLER\LCD_MODULE_16X2\LCD_MODULE_16X2_4BIT.ASM 90 : Found opcode in column 1. (GOTO)
-Warning[224] C:\GITHUBREPOSITORIES\PIC_MICROCONTROLLER\LCD_MODULE_16X2\LCD_MODULE_16X2_4BIT.ASM 371 : Use of this instruction is not recommended.
-Warning[224] C:\GITHUBREPOSITORIES\PIC_MICROCONTROLLER\LCD_MODULE_16X2\LCD_MODULE_16X2_4BIT.ASM 376 : Use of this instruction is not recommended.
 Executing: "C:\Program Files\Microchip\MPASM Suite\mplink.exe" /p16F84A "LCD_Module_16x2_4Bit.o" /u_DEBUG /z__MPLAB_BUILD=1 /z__MPLAB_DEBUG=1 /o"LCD_Module_16x2_4Bit.cof" /M"LCD_Module_16x2_4Bit.map" /W /x
 MPLINK 4.48, Linker
 Device Database Version 1.12
