@@ -1,0 +1,552 @@
+MPASM  5.50          LCD_MODULE_16X2_4BIT.ASM   12-3-2016  18:15:37         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+Warning[205]: Found directive in column 1. (LIST)
+                      00001 LIST P=16F84A
+                      00002 
+                      00003 ;LANGUAGE               RISC-like architecture
+                      00004 ;WRITTEN BY             Franz Ayestaran
+                      00005 ;DATE                   08/08/02               
+                      00006 ;FILE SAVED AS          LCD_Module_16x2_4Bit.ASM
+                      00007 ;FOR PIC 16C84          18 pin device
+                      00008 ;RESONATOR              4MHz
+                      00009 ;CODE PROTECTION        OFF
+                      00010 ;SOFTWARE FUNCTION      'Create a 16 character message 
+                      00011 ;                        using the <UP><DOWN><ENTER> key'
+                      00012 
+                      00013 ;= 16x2 LCD MODULE =
+                      00014 ;===================
+                      00015 
+                      00016 ;Pin D Symbol Level I/O Function 
+                      00017 ; 1  9  Vss    -     -  Power supply (GND) 
+                      00018 ; 2  0  Vdd    -     -  Power supply (+5V) 
+                      00019 ; 3  9  V0     -     -  Contrast adjust 
+                      00020 ; 4  5  RS     0/1   I  0 = Instruction input 1 = Data input 
+                      00021 ; 5  9  R/W    0/1   I  0 = Write to LCD module 1 = Read from LCD module 
+                      00022 ; 6  6  E      1-->0 I  Enable signal 
+                      00023 ; 7  -  DB0    0/1  I/O Data bus line 0 (LSB) 
+                      00024 ; 8  -  DB1    0/1  I/O Data bus line 1 
+                      00025 ; 9  -  DB2    0/1  I/O Data bus line 2 
+                      00026 ;10  -  DB3    0/1  I/O Data bus line 3 
+                      00027 ;11  1  DB4    0/1  I/O Data bus line 4 
+                      00028 ;12  2  DB5    0/1  I/O Data bus line 5 
+                      00029 ;13  3  DB6    0/1  I/O Data bus line 6 
+                      00030 ;14  4  DB7    0/1  I/O Data bus line 7 (MSB) 
+                      00031 ;15  0  LED             BACKLIGHT +
+                      00032 ;16  9  LED             BACKLIGHT -
+                      00033 
+                      00034 ;    8  LED             RED ANODE
+                      00035 ;    7  LED             GREEN ANODE
+                      00036 ;    0  +5V             POWER SUPPLY
+                      00037 ;    -                  NOT USED
+                      00038  
+                      00039 ;==== DECLARE VARIABLES (f) ====
+                      00040 ;===============================
+                      00041 
+  00000002            00042 PC      EQU     2
+  00000003            00043 STATUS  EQU     3
+  00000000            00044 PA0     EQU     0
+  00000081            00045 OPTREG  EQU     81H
+  00000005            00046 RP0     EQU     5
+  00000010            00047 CHAR    EQU     010H
+  00000011            00048 NIBBLE  EQU     011H
+  00000012            00049 LETTER  EQU     012H
+  00000013            00050 DIRECTION EQU   013H
+  00000014            00051 DISPLAY EQU     014H
+  00000000            00052 ZERO    EQU     00H
+MPASM  5.50          LCD_MODULE_16X2_4BIT.ASM   12-3-2016  18:15:37         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00053 
+  00000020            00054 LEFT    EQU     B'00100000'
+  00000024            00055 RIGHT   EQU     B'00100100'
+  00000028            00056 LINE1   EQU     B'00101000'
+  0000002C            00057 LINE2   EQU     B'00101100'
+  0000002F            00058 DISPLAY_ON  EQU B'00101111'
+  0000002B            00059 DISPLAY_OFF EQU B'00101011'
+                      00060 
+  00000000            00061 BIT0    EQU     0
+  00000001            00062 BIT1    EQU     1
+  00000002            00063 BIT2    EQU     2
+  00000003            00064 BIT3    EQU     3
+  00000004            00065 BIT4    EQU     4
+  00000005            00066 BIT5    EQU     5
+  00000006            00067 BIT6    EQU     6
+  00000007            00068 BIT7    EQU     7
+                      00069 
+  00000000            00070 DB4     EQU     0 ;Pin1 Gray
+  00000001            00071 DB5     EQU     1 ;Pin2 White
+  00000002            00072 DB6     EQU     2 ;Pin3 Black
+  00000003            00073 DB7     EQU     3 ;Pin4 Brown
+                      00074 
+  00000004            00075 RS      EQU     4 ;Pin5 Yellow
+  00000005            00076 ENABLE  EQU     5 ;Pin6 Blue
+                      00077 
+                      00078 ;== DEFINE PORT-A (A0-A4) ==
+                      00079 
+  00000005            00080 PORTA   EQU     05H
+                      00081 
+                      00082 ;== DEFINE PORT-B (B0-B7) ==
+                      00083 
+  00000086            00084 TRISB   EQU     86H    
+  00000006            00085 PORTB   EQU     06H
+Warning[203]: Found opcode in column 1. (OPTION)
+Warning[211]: Extraneous arguments on the line.
+Warning[224]: Use of this instruction is not recommended.
+0000   0062           00086 OPTION  EQU     88H
+                      00087 
+                      00088 ;===========================
+                      00089 
+Warning[203]: Found opcode in column 1. (GOTO)
+0001   28B4           00090 GOTO    INITIALISE
+                      00091 
+                      00092 ;*** SUBROUTINES ***
+                      00093 ;*******************
+                      00094 
+0002                  00095 SET_DELAY                       ;Sleep Function
+0002   1683           00096         BSF     STATUS,RP0      ;SELECT REGISTER BANK 1
+0003   0081           00097         MOVWF   OPTREG^80H      ;ASSIGN PRESCALER (1:4) TO WDT
+0004   1283           00098         BCF     STATUS,RP0      ;SELECT REGISTER BANK 0
+0005   0008           00099         RETURN
+                      00100 
+0006                  00101 STROBE
+MPASM  5.50          LCD_MODULE_16X2_4BIT.ASM   12-3-2016  18:15:37         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0006   0063           00102         SLEEP
+0007   1286           00103         BCF     PORTB,ENABLE       
+0008   0008           00104         RETURN
+                      00105 
+                      00106 ;RS RW DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0                               
+                      00107 ;0  0   0   0   1  DL   N   F   *   *    
+0009                  00108 SET_FUNCTION
+0009   3022           00109         MOVLW   B'00100010'     
+000A   0086           00110         MOVWF   PORTB
+000B   2006           00111         CALL    STROBE      
+000C   3022           00112         MOVLW   B'00100010'     
+000D   0086           00113         MOVWF   PORTB
+000E   2006           00114         CALL    STROBE
+000F   3028           00115         MOVLW   B'00101000'    
+0010   0086           00116         MOVWF   PORTB
+0011   2006           00117         CALL    STROBE
+0012   0008           00118         RETURN
+                      00119 
+                      00120 ;RS RW DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0                               
+                      00121 ;0  0   0   0   0   0   0   1  I/D  S  
+0013                  00122 ENTRY_MODE_SET
+0013   3020           00123         MOVLW   B'00100000'
+0014   0086           00124         MOVWF   PORTB
+0015   2006           00125         CALL    STROBE
+0016   3026           00126         MOVLW   B'00100110'     
+0017   0086           00127         MOVWF   PORTB
+0018   2006           00128         CALL    STROBE
+0019   0008           00129         RETURN
+                      00130 
+                      00131 ;RS RW DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0                               
+                      00132 ;0  0   0   0   0   0   1   D   C   B  
+001A                  00133 SET_DISPLAY
+001A   0094           00134         MOVWF   DISPLAY
+001B   3020           00135         MOVLW   B'00100000'
+001C   0086           00136         MOVWF   PORTB
+001D   2006           00137         CALL    STROBE
+001E   0814           00138         MOVFW   DISPLAY
+001F   0086           00139         MOVWF   PORTB
+0020   2006           00140         CALL    STROBE
+0021   0008           00141         RETURN
+                      00142 
+                      00143 ;RS RW DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0                               
+                      00144 ;0  0   0   1   A   A   A   A   A   A  
+0022                  00145 SET_CG_RAM_ADDRESS
+0022   3024           00146         MOVLW   B'00100100'
+0023   0086           00147         MOVWF   PORTB
+0024   2006           00148         CALL    STROBE
+0025   3020           00149         MOVLW   B'00100000'
+0026   0086           00150         MOVWF   PORTB
+0027   2006           00151         CALL    STROBE
+0028   0008           00152         RETURN
+                      00153 
+                      00154 ;RS RW DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0                               
+MPASM  5.50          LCD_MODULE_16X2_4BIT.ASM   12-3-2016  18:15:37         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00155 ;0  0   1   A   A   A   A   A   A   A  
+0029                  00156 SET_DD_RAM_ADDRESS
+0029   3028           00157         MOVLW   B'00101000'
+002A   0086           00158         MOVWF   PORTB
+002B   2006           00159         CALL    STROBE
+002C   3020           00160         MOVLW   B'00100000'
+002D   0086           00161         MOVWF   PORTB
+002E   2006           00162         CALL    STROBE
+002F   0008           00163         RETURN
+                      00164 
+                      00165 ;RS RW DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0                               
+                      00166 ;0  0   0   0   0   1  S/C R/L  *   *   
+                      00167 
+                      00168 ;S/C R/L                                          
+                      00169 ;=== ===                                          
+                      00170 ; 1   0   Shifts the entire display to the left  
+                      00171 ;         The cursor follows the display shift   
+                      00172 ; 1   1   Shifts the entire display to the right 
+                      00173 ;         The cursor follows the display shift   
+                      00174 
+0030                  00175 SHIFT_DISPLAY_LEFT
+0030   3021           00176         MOVLW   B'00100001'
+0031   0086           00177         MOVWF   PORTB
+0032   2006           00178         CALL    STROBE
+0033   3028           00179         MOVLW   B'00101000'
+0034   0086           00180         MOVWF   PORTB
+0035   2006           00181         CALL    STROBE
+0036   0008           00182         RETURN
+                      00183 
+                      00184 ;RS RW DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0                               
+                      00185 ;0  0   0   0   0   1  S/C R/L  *   *   
+                      00186 
+                      00187 ;S/C R/L                                          
+                      00188 ;=== ===                                          
+                      00189 ; 1   0   Shifts the entire display to the left  
+                      00190 ;         The cursor follows the display shift   
+                      00191 ; 1   1   Shifts the entire display to the right 
+                      00192 ;         The cursor follows the display shift   
+                      00193 
+0037                  00194 SHIFT_DISPLAY_RIGHT
+0037   3021           00195         MOVLW   B'00100001'
+0038   0086           00196         MOVWF   PORTB
+0039   2006           00197         CALL    STROBE
+003A   302C           00198         MOVLW   B'00101100'
+003B   0086           00199         MOVWF   PORTB
+003C   2006           00200         CALL    STROBE
+003D   0008           00201         RETURN
+                      00202 
+                      00203 ;RS RW DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0                               
+                      00204 ;0  0   0   0   0   1  S/C R/L  *   *   
+                      00205 
+                      00206 ;S/C R/L                                          
+                      00207 ;=== ===                                          
+MPASM  5.50          LCD_MODULE_16X2_4BIT.ASM   12-3-2016  18:15:37         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00208 ; 0   0   Shifts the cursor position to the left 
+                      00209 ;         (Address Counter is decremented by 1)   
+                      00210 ; 0   1   Shifts the cursor position to the right
+                      00211 ;         (Address Counter is incremented by 1)  
+                      00212 
+003E                  00213 MOVE_CURSOR
+003E   0093           00214         MOVWF   DIRECTION
+003F   3021           00215         MOVLW   B'00100001'
+0040   0086           00216         MOVWF   PORTB
+0041   2006           00217         CALL    STROBE
+0042   0813           00218         MOVFW   DIRECTION
+0043   0086           00219         MOVWF   PORTB
+0044   2006           00220         CALL    STROBE
+0045   0008           00221         RETURN
+                      00222 
+                      00223 ;RS RW DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0                               
+                      00224 ;0  0   0   0   0   0   0   0   0   1   
+0046                  00225 CLEAR_DISPLAY
+0046   3020           00226         MOVLW   B'00100000'
+0047   0086           00227         MOVWF   PORTB
+0048   2006           00228         CALL    STROBE
+0049   3021           00229         MOVLW   B'00100001'
+004A   0086           00230         MOVWF   PORTB
+004B   2006           00231         CALL    STROBE
+004C   0008           00232         RETURN
+                      00233 
+                      00234 ;RS RW DB7 DB6 DB5 DB4 DB3 DB2 DB1 DB0                               
+                      00235 ;0  0   0   0   0   0   0   0   1   0   
+004D                  00236 RETURN_HOME
+004D   3020           00237         MOVLW   B'00100000'
+004E   0086           00238         MOVWF   PORTB
+004F   2006           00239         CALL    STROBE
+0050   3022           00240         MOVLW   B'00100010'
+0051   0086           00241         MOVWF   PORTB
+0052   2006           00242         CALL    STROBE
+0053   0008           00243         RETURN
+                      00244 
+0054                  00245 GOTO_LINE
+0054   0086           00246         MOVWF   PORTB
+0055   2006           00247         CALL    STROBE
+0056   3020           00248         MOVLW   B'00100000'
+0057   0086           00249         MOVWF   PORTB
+0058   2006           00250         CALL    STROBE
+0059   0008           00251         RETURN
+                      00252 
+005A                  00253 SEND_CHAR      
+005A   0090           00254         MOVWF   CHAR            ;MOVE CONTENTS OF REGISTER 'W' INTO
+                      00255                                 ;THE ELEMENT OF VARIABLE 'CHAR' 
+005B   39F0           00256         ANDLW   B'11110000'     ;MASK OUT UPPER 4-BITS
+005C   3E03           00257         ADDLW   B'00000011'     ;ADD 2-BITS (BIT 1 & 2)
+005D   0091           00258         MOVWF   NIBBLE          ;MOVE CONTENTS OF REGISTER 'W' INTO
+                      00259                                 ;CONTENTS OF VARIABLE 'NIBBLE'
+005E   0E11           00260         SWAPF   NIBBLE,W        ;SWAP UPPER AND LOWER 4-BITS AND
+MPASM  5.50          LCD_MODULE_16X2_4BIT.ASM   12-3-2016  18:15:37         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00261                                 ;PLACE RESULT INTO REGISTER 'W'
+005F   0086           00262         MOVWF   PORTB           ;MOVE CONTENTS OF REGISTER 'W' INTO
+                      00263                                 ;THE ELEMENT OF VARIABLE PORTB
+0060   2006           00264         CALL    STROBE   
+0061   0810           00265         MOVFW   CHAR            ;MOVE THE CONTENTS OF VARIABLE 'CHAR'
+                      00266                                 ;INTO THE REGISTER 'W'
+0062   390F           00267         ANDLW   B'00001111'     
+0063   3E30           00268         ADDLW   B'00110000'
+0064   0086           00269         MOVWF   PORTB
+0065   2006           00270         CALL    STROBE
+0066   0008           00271         RETURN
+                      00272 
+0067                  00273 DEFINE_CHARACTER_0
+0067   2022           00274         CALL SET_CG_RAM_ADDRESS
+                      00275        
+0068   3008           00276         MOVLW B'00001000'       
+0069   205A           00277         CALL SEND_CHAR
+006A   300C           00278         MOVLW B'00001100' 
+006B   205A           00279         CALL SEND_CHAR
+006C   300A           00280         MOVLW B'00001010' 
+006D   205A           00281         CALL SEND_CHAR
+006E   3009           00282         MOVLW B'00001001' 
+006F   205A           00283         CALL SEND_CHAR
+0070   3009           00284         MOVLW B'00001001' 
+0071   205A           00285         CALL SEND_CHAR
+0072   300A           00286         MOVLW B'00001010' 
+0073   205A           00287         CALL SEND_CHAR
+0074   300C           00288         MOVLW B'00001100' 
+0075   205A           00289         CALL SEND_CHAR
+0076   3008           00290         MOVLW B'00001000' 
+0077   205A           00291         CALL SEND_CHAR
+                      00292 
+0078                  00293 MESSAGE_PAGE
+0078   3045           00294         MOVLW   'E'
+0079   205A           00295         CALL    SEND_CHAR             
+007A   306E           00296         MOVLW   'n'
+007B   205A           00297         CALL    SEND_CHAR             
+007C   3074           00298         MOVLW   't'
+007D   205A           00299         CALL    SEND_CHAR             
+007E   3065           00300         MOVLW   'e'
+007F   205A           00301         CALL    SEND_CHAR             
+0080   3072           00302         MOVLW   'r'
+0081   205A           00303         CALL    SEND_CHAR
+0082   3020           00304         MOVLW   ' '
+0083   205A           00305         CALL    SEND_CHAR             
+0084   304D           00306         MOVLW   'M'
+0085   205A           00307         CALL    SEND_CHAR             
+0086   3065           00308         MOVLW   'e'
+0087   205A           00309         CALL    SEND_CHAR             
+0088   3073           00310         MOVLW   's'
+0089   205A           00311         CALL    SEND_CHAR             
+008A   3073           00312         MOVLW   's'
+008B   205A           00313         CALL    SEND_CHAR             
+MPASM  5.50          LCD_MODULE_16X2_4BIT.ASM   12-3-2016  18:15:37         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+008C   3061           00314         MOVLW   'a'
+008D   205A           00315         CALL    SEND_CHAR             
+008E   3067           00316         MOVLW   'g'
+008F   205A           00317         CALL    SEND_CHAR             
+0090   3065           00318         MOVLW   'e'
+0091   205A           00319         CALL    SEND_CHAR             
+0092   3000           00320         MOVLW   0
+0093   205A           00321         CALL    SEND_CHAR
+0094   0008           00322         RETURN
+                      00323 
+0095   0063           00324 SLEEP5  SLEEP
+0096   0063           00325         SLEEP
+0097   0063           00326         SLEEP
+0098   0063           00327         SLEEP
+0099   0063           00328         SLEEP
+009A   0008           00329         RETURN
+                      00330 
+009B                  00331 CHAR_UP
+009B   0A12           00332         INCF    LETTER,W        ;INCREMENT VARIABLE 'LETTER' AND PLACE
+                      00333                                 ;THE RESULT IN REGISTER 'W'
+009C   0092           00334         MOVWF   LETTER          ;STORE RESULT BACK IN VARIABLE 'LETTER'
+009D   205A           00335         CALL    SEND_CHAR  
+009E   3020           00336         MOVLW   LEFT                 
+009F   203E           00337         CALL    MOVE_CURSOR
+00A0   1706           00338         BSF     PORTB,BIT6      ;GREEN LED ON
+00A1   2095           00339         CALL    SLEEP5
+00A2   1306           00340         BCF     PORTB,BIT6      ;GREEN LED OFF
+00A3   0008           00341         RETURN
+                      00342 
+00A4                  00343 CHAR_DOWN
+00A4   0312           00344         DECF    LETTER,W        ;DECREMENT VARIABLE 'LETTER' AND PLACE
+                      00345                                 ;THE RESULT IN REGISTER 'W'
+00A5   0092           00346         MOVWF   LETTER          ;STORE RESULT BACK IN VARIABLE 'LETTER'
+00A6   205A           00347         CALL    SEND_CHAR  
+00A7   3020           00348         MOVLW   LEFT
+00A8   203E           00349         CALL    MOVE_CURSOR
+00A9   1706           00350         BSF     PORTB,BIT6      ;GREEN LED ON
+00AA   2095           00351         CALL    SLEEP5
+00AB   1306           00352         BCF     PORTB,BIT6      ;GREEN LED OFF
+00AC   0008           00353         RETURN
+                      00354 
+00AD                  00355 NEXT_CHAR
+00AD   3024           00356         MOVLW   RIGHT
+00AE   203E           00357         CALL    MOVE_CURSOR
+00AF   1786           00358         BSF     PORTB,BIT7      ;RED LED ON
+00B0   0063           00359         SLEEP
+00B1   1386           00360         BCF     PORTB,BIT7      ;RED LED OFF
+00B2   2095           00361         CALL    SLEEP5
+00B3   0008           00362         RETURN
+                      00363 
+                      00364 ;**************************
+                      00365 
+00B4                  00366 INITIALISE
+MPASM  5.50          LCD_MODULE_16X2_4BIT.ASM   12-3-2016  18:15:37         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00367 
+00B4                  00368 SET_PORTA_IN
+00B4   0185           00369          CLRF    PORTA           ;CLEAR PORT BITS
+00B5   301F           00370          MOVLW   B'00011111'     ;SET UP A0-A4 AS INPUTS
+Warning[224]: Use of this instruction is not recommended.
+00B6   0065           00371          TRIS    PORTA           ;DO IT
+                      00372  
+00B7                  00373 SET_PORTB_OUT
+00B7   0186           00374         CLRF    PORTB           ;ENSURE PORT IS CLEAR
+00B8   3000           00375         MOVLW   B'00000000'     ;SET PORT BITS 0-7 AS OUTPUT
+Warning[224]: Use of this instruction is not recommended.
+00B9   0066           00376         TRIS    PORTB           ;DO IT
+                      00377         
+00BA   3000           00378 MAIN    MOVLW   ZERO            ;SET DELAY BY SETTING REGISTER 'W' TO ZERO
+00BB   2002           00379         CALL    SET_DELAY       ;SET WDT TO ZERO
+00BC   2009           00380         CALL    SET_FUNCTION    ;SET LCD FUNCTION
+00BD   302B           00381         MOVLW   DISPLAY_OFF
+00BE   201A           00382         CALL    SET_DISPLAY     ;SET LCD DISPLAY
+00BF   2013           00383         CALL    ENTRY_MODE_SET  ;SET LCD ENTRY MODE
+00C0   2067           00384         CALL    DEFINE_CHARACTER_0
+00C1   3028           00385         MOVLW   LINE1
+00C2   2054           00386         CALL    GOTO_LINE        
+00C3   2078           00387         CALL    MESSAGE_PAGE    ;DISPLAY TITLE PAGE
+00C4   302F           00388         MOVLW   DISPLAY_ON
+00C5   201A           00389         CALL    SET_DISPLAY
+00C6   3041           00390         MOVLW   'A'
+00C7   0092           00391         MOVWF   LETTER
+00C8   302C           00392         MOVLW   LINE2
+00C9   2054           00393         CALL    GOTO_LINE
+                      00394 
+00CA   0063           00395 LOOP    SLEEP
+00CB   1C05           00396         BTFSS   PORTA,BIT0      ;TEST PORTA BIT0
+00CC   20A4           00397         CALL    CHAR_DOWN       ;IF BIT0 IS SET LO THEN CALL DOWN
+00CD   1C85           00398         BTFSS   PORTA,BIT1      ;TEST PORTA BIT1
+00CE   209B           00399         CALL    CHAR_UP         ;IF BIT0 IS SET LO THEN CALL UP
+00CF   1D05           00400         BTFSS   PORTA,BIT2      ;TEST PORTA BIT2
+00D0   20AD           00401         CALL    NEXT_CHAR       ;IF BIT0 IS SET LO THEN CALL NEXT
+                      00402         
+00D1   28CA           00403         GOTO    LOOP
+                      00404         END
+MPASM  5.50          LCD_MODULE_16X2_4BIT.ASM   12-3-2016  18:15:37         PAGE  9
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+BIT0                              00000000
+BIT1                              00000001
+BIT2                              00000002
+BIT3                              00000003
+BIT4                              00000004
+BIT5                              00000005
+BIT6                              00000006
+BIT7                              00000007
+CHAR                              00000010
+CHAR_DOWN                         000000A4
+CHAR_UP                           0000009B
+CLEAR_DISPLAY                     00000046
+DB4                               00000000
+DB5                               00000001
+DB6                               00000002
+DB7                               00000003
+DEFINE_CHARACTER_0                00000067
+DIRECTION                         00000013
+DISPLAY                           00000014
+DISPLAY_OFF                       0000002B
+DISPLAY_ON                        0000002F
+ENABLE                            00000005
+ENTRY_MODE_SET                    00000013
+GOTO_LINE                         00000054
+INITIALISE                        000000B4
+LEFT                              00000020
+LETTER                            00000012
+LINE1                             00000028
+LINE2                             0000002C
+LOOP                              000000CA
+MAIN                              000000BA
+MESSAGE_PAGE                      00000078
+MOVE_CURSOR                       0000003E
+NEXT_CHAR                         000000AD
+NIBBLE                            00000011
+OPTREG                            00000081
+PA0                               00000000
+PC                                00000002
+PORTA                             00000005
+PORTB                             00000006
+RETURN_HOME                       0000004D
+RIGHT                             00000024
+RP0                               00000005
+RS                                00000004
+SEND_CHAR                         0000005A
+SET_CG_RAM_ADDRESS                00000022
+SET_DD_RAM_ADDRESS                00000029
+SET_DELAY                         00000002
+SET_DISPLAY                       0000001A
+SET_FUNCTION                      00000009
+SET_PORTA_IN                      000000B4
+SET_PORTB_OUT                     000000B7
+SHIFT_DISPLAY_LEFT                00000030
+MPASM  5.50          LCD_MODULE_16X2_4BIT.ASM   12-3-2016  18:15:37         PAGE 10
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SHIFT_DISPLAY_RIGHT               00000037
+SLEEP5                            00000095
+STATUS                            00000003
+STROBE                            00000006
+TRISB                             00000086
+ZERO                              00000000
+__16F84A                          00000001
+__DEBUG                           1
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0080 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+00C0 : XXXXXXXXXXXXXXXX XX-------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:   210
+Program Memory Words Free:   814
+
+
+Errors   :     0
+Warnings :     7 reported,     0 suppressed
+Messages :     0 reported,     0 suppressed
+
+
