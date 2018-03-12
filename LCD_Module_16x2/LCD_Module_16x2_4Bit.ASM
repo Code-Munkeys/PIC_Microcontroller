@@ -2,7 +2,7 @@ LIST P=16F84A
 
 ;LANGUAGE               RISC-like architecture
 ;WRITTEN BY             Franz Ayestaran
-;DATE                   08/08/02               
+;DATE                   08/08/97               
 ;FILE SAVED AS          LCD_Module_16x2_4Bit.ASM
 ;FOR PIC 16C84          18 pin device
 ;RESONATOR              4MHz
@@ -396,9 +396,9 @@ LOOP    SLEEP
         BTFSS   PORTA,BIT0      ;TEST PORTA BIT0
         CALL    CHAR_DOWN       ;IF BIT0 IS SET LO THEN CALL DOWN
         BTFSS   PORTA,BIT1      ;TEST PORTA BIT1
-        CALL    CHAR_UP         ;IF BIT0 IS SET LO THEN CALL UP
+        CALL    CHAR_UP         ;IF BIT1 IS SET LO THEN CALL UP
         BTFSS   PORTA,BIT2      ;TEST PORTA BIT2
-        CALL    NEXT_CHAR       ;IF BIT0 IS SET LO THEN CALL NEXT
+        CALL    NEXT_CHAR       ;IF BIT2 IS SET LO THEN CALL NEXT
         
         GOTO    LOOP
         END
