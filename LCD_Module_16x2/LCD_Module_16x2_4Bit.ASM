@@ -1,4 +1,4 @@
-LIST P=16F84A
+LIST P=16C84
 
 ;LANGUAGE               RISC-like architecture
 ;WRITTEN BY             Franz Ayestaran
