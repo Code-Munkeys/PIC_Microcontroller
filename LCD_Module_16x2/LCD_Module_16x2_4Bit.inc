@@ -10,24 +10,24 @@
 ;==== DECLARE VARIABLES (f) ====
 ;===============================
 
-PC          EQU     2
-STATUS      EQU     3
-C           EQU     0
-OPTREG      EQU     81H
-RP0FLAG     EQU     5
-CHAR        EQU     010H
-NIBBLE      EQU     011H
-LETTER      EQU     012H
-DIRECTION   EQU     013H
-DISPLAY     EQU     014H
-ZERO        EQU     00H
+PC              EQU     2
+STATUS          EQU     3
+C               EQU     0
+OPTREG          EQU     81H
+RP0FLAG         EQU     5
+CHAR            EQU     010H
+NIBBLE          EQU     011H
+LETTER          EQU     012H
+DIRECTION       EQU     013H
+DISPLAY         EQU     014H
+ZERO            EQU     00H
 
-LEFT    	EQU     B'00100000'
+LEFT            EQU     B'00100000'
 RIGHT   	EQU     B'00100100'
 LINE1   	EQU     B'00101000'
 LINE2   	EQU     B'00101100'
-DISPLAY_ON  EQU 	B'00101111'
-DISPLAY_OFF EQU 	B'00101011'
+DISPLAY_ON      EQU 	B'00101111'
+DISPLAY_OFF     EQU 	B'00101011'
 
 BIT0    	EQU     0
 BIT1    	EQU     1
@@ -264,29 +264,29 @@ SEND_CHAR
 DEFINE_CHARACTER_0
         CALL SET_CG_RAM_ADDRESS
        
-        MOVLW B'00001000'       
+        MOVLW   B'00001000'       
         CALL 	SEND_CHAR
-        MOVLW B'00001100' 
+        MOVLW   B'00001100' 
         CALL 	SEND_CHAR
-        MOVLW B'00001010' 
+        MOVLW   B'00001010' 
         CALL 	SEND_CHAR
-        MOVLW B'00001001' 
+        MOVLW   B'00001001' 
         CALL 	SEND_CHAR
-        MOVLW B'00001001' 
+        MOVLW   B'00001001' 
         CALL 	SEND_CHAR
-        MOVLW B'00001010' 
+        MOVLW   B'00001010' 
         CALL 	SEND_CHAR
-        MOVLW B'00001100' 
+        MOVLW   B'00001100' 
         CALL 	SEND_CHAR
-        MOVLW B'00001000' 
+        MOVLW   B'00001000' 
         CALL 	SEND_CHAR
         RETURN
 
 INITIALISE_LCD 
         CLRF    PORTIOB         ;ENSURE PORT IS CLEAR
         MOVLW   B'00000000'     ;SET PORT BITS 0-7 AS OUTPUT
-        BANKSEL  TRISB
-        MOVWF    PORTIOB
+        BANKSEL TRISB
+        MOVWF   PORTIOB
         
         MOVLW   ZERO            ;SET DELAY BY SETTING REGISTER 'W' TO ZERO
         CALL    SET_DELAY       ;SET WDT TO ZERO
