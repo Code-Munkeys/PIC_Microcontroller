@@ -48,9 +48,9 @@ ENABLE  	EQU     5 ;Pin6 Blue
 
 ;== DEFINE PORT-B (B0-B7) ==
 
-TRISB       EQU     86H    
-PORTIOB     EQU     06H
-OPTIONS     EQU     88H
+TRISB           EQU     86H    
+PORTIOB         EQU     06H
+OPTIONS         EQU     88H
 
 ;===========================
 
